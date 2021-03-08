@@ -13,8 +13,8 @@ class Model:
         self.arduino.close()
         exit()
 
-    def led_on(self):
+    def write(self):
         print("Sent", self.arduino.write(bytearray([0x01, 0x02, 0x03, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E])), "bytes")
 
-    def led_off(self):
+    def read(self):
         print(self.arduino.read(8))

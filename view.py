@@ -13,11 +13,11 @@ class View:
 
         self.tab_menu = TabMenu(self.main_frame)
 
-        self.tab_menu.tab_main.btn_led_on.bind("<Button>", self.led_on)
-        self.tab_menu.tab_main.btn_led_off.bind("<Button>", self.led_off)
+        self.tab_menu.tab_main.btn_write.bind("<Button>", self.write)
+        self.tab_menu.tab_main.btn_read.bind("<Button>", self.read)
 
-    def led_on(self, event):
-        self.model.led_on()
+    def write(self, event):
+        self.model.write()
 
-    def led_off(self, event):
-        self.model.led_off()
+    def read(self, event):
+        self.model.read()
