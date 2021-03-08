@@ -7,10 +7,10 @@ class MainTab(tk.Frame):
         self.root = root
 
         # Contents of MainTab below
-        # "LED ON" Button
+        # "Write" Button
         self.btn_write = tk.Button(self, text="Write")
         self.btn_write.grid(row=0, column=0, ipadx=10, ipady=10)
 
-        # "LED OFF" Button
+        # "Read" Button
         self.btn_read = tk.Button(self, text="Read")
         self.btn_read.grid(row=0, column=1, ipadx=10, ipady=10)
