@@ -1,10 +1,9 @@
-import tkinter as tk
+import tkinter as tk    # tk.Menu
 
 
 class MenuBar(tk.Menu):
     def __init__(self, root, *args, **kwargs):
-        tk.Menu.__init__(self, root, *args, **kwargs)
-        self.root = root
+        super().__init__(root, *args, **kwargs)
 
         self.add_command(label="File")
         self.add_command(label="Software")

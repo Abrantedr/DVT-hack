@@ -5,9 +5,14 @@ class Model:
     __SERIAL_BAUDRATE = 115200
     __COM3 = "COM3"
     __COM4 = "COM4"
+    __NON_BLOCKING = 0
 
     def __init__(self):
-        self.arduino = serial.Serial(self.__COM3, self.__SERIAL_BAUDRATE, timeout=0)
+        try:
+            self.arduino = serial.Serial(port=self.__COM3, baudrate=self.__SERIAL_BAUDRATE, timeout=self.__NON_BLOCKING)
+            print(f"Port connected: {self.arduino.name}")
+        except serial.SerialException:
+            print("The device can not be found or can not be configured")
 
     def on_close(self):
         self.arduino.close()
