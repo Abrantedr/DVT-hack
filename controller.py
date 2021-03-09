@@ -14,7 +14,7 @@ class Controller:
         self.menu_bar = MenuBar(self.root)
         self.main_window = MainWindow(self.root, self)  # Sends controller to main window
 
-    def write(self):
+    def write(self):    # Controller calls model
         self.model.write()
 
     def read(self):
