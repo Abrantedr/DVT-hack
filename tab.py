@@ -45,7 +45,7 @@ class IOTab(tk.Frame):  # self -> tk.Frame
         self.lbl_io.pack()
 
 
-class PDOTab(tk.Frame):
+class PDOTab(tk.Frame):     # self -> tk.Frame
     def __init__(self, root, *args, **kwargs):
         tk.Frame.__init__(self, root, *args, **kwargs)
         self.root = root

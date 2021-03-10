@@ -1,7 +1,7 @@
 import tkinter as tk    # tk.Menu
 
 
-class MenuBar(tk.Menu):
+class MenuBar(tk.Menu):     # self -> tk.Menu
     def __init__(self, root, *args, **kwargs):
         super().__init__(root, *args, **kwargs)
 
