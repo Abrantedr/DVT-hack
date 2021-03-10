@@ -1,4 +1,4 @@
-#define STANDARD_FRAME 8
+#define STANDARD_FRAME 11
 byte buf[STANDARD_FRAME];
 
 void setup() {

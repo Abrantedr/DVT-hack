@@ -1,11 +1,8 @@
-import tkinter as tk        # tk.Frame
+import tkinter as tk        # tk.BOTH
 from tkinter import ttk     # ttk.Notebook
 
 # Tab imports
-from main_tab import MainTab
-from tree_tab import TreeTab
-from io_tab import IOTab
-from pdo_tab import PDOTab
+from tab import MainTab, TreeTab, IOTab, PDOTab
 
 
 class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
