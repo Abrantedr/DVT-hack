@@ -2,12 +2,15 @@
 #include <SPI.h>
 
 #define STANDARD_FRAME 11
+#define DLC 8
 #define SERIAL_BAUDRATE 115200
+#define SERIAL_TIMEOUT 50
 
 // To CAN bus
 struct can_frame msg, reply;
 // To serial
 byte buf[STANDARD_FRAME];
+byte b;
 // MCP2515 Constructor
 MCP2515 mcp2515(10);
 
@@ -20,16 +23,16 @@ MCP2515::ERROR send(canid_t can_id=0, __u8 can_dlc=0, __u8 data_0=0,
 
 void setup() {
 
-  cli();                          // Disable global interrupts
+  cli();                              // Disable global interrupts
  
   // Start serial communication
   Serial.begin(SERIAL_BAUDRATE);
-  while(!Serial);                 // Wait until port is open
+  Serial.setTimeout(SERIAL_TIMEOUT);  // Timeout serial read
+  while(!Serial);                     // Wait until port is open
   
   //  MCP2515 configuration
-  /* These two lines cause USART transmission to fail */
-  //mcp2515.reset();                            
-  //mcp2515.setBitrate(CAN_1000KBPS, MCP_8MHZ);
+  mcp2515.reset();                            
+  mcp2515.setBitrate(CAN_1000KBPS, MCP_8MHZ);
   mcp2515.setNormalMode();
   
   // TIMER1 configuration
@@ -45,49 +48,28 @@ void setup() {
 
 
 void loop() {
-  if (Serial.available() >= STANDARD_FRAME) {         // If a 11-byte frame has been sent (or more),
-    Serial.readBytes(buf, STANDARD_FRAME);            // just read the first 11 bytes.
-
-    /* Process message to interface with CAN bus */
-    //send(buf[0] << 8 | buf[1], ...
-
-    if (Serial.availableForWrite() >= STANDARD_FRAME) // Also, if we are able to send a message,  
-      Serial.write(buf, STANDARD_FRAME);              // send it back.
-  }
+  // Nothing here
 }
 
 
-ISR(TIMER1_OVF_vect, ISR_BLOCK) { // Has to be less than 65 ms
-  if (mcp2515.readMessage(&reply) == MCP2515::ERROR_OK) {
-    Serial.print(reply.can_id, HEX);
-    Serial.print(" "); 
-    Serial.print(reply.can_dlc, HEX);
-    Serial.print(" ");
-    
-    for (int i = 0; i < reply.can_dlc; i++) {
-      Serial.print(reply.data[i], HEX);
-      Serial.print(" ");
-    }
- 
-    Serial.println();      
-  }
+ISR(TIMER1_OVF_vect, ISR_BLOCK) { // Anything here has to take less than 65 ms
+  /* Sniff CAN and send back to application */ 
 }
 
-/* Not compatible with SPI.beginTransaction()
- * as it disables external interrupts  0 and 1
- * (Tx and Rx pins for USART communication
-
-void serialEvent() {
-  if (Serial.readBytes(buf, STANDARD_FRAME)){
+void serialEvent() {  // Not an ISR, it's called at the top of loop() function
+  /* We have received a frame from application */
+  if (Serial.readBytes(buf, STANDARD_FRAME)){ // Blocks until we have read STANDARD_FRAME bytes or timeout
+    /* Send frame to CAN bus */
+    send(buf[0] << 8 | buf[1], DLC, buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
     if (Serial.availableForWrite() >= STANDARD_FRAME)
       Serial.write(buf, STANDARD_FRAME);
   }
 }
-*/
+
  
-MCP2515::ERROR send(canid_t can_id=0, __u8 can_dlc=0, __u8 data_0=0,
-    __u8 data_1=0, __u8 data_2=0, __u8 data_3=0, __u8 data_4=0, __u8 data_5=0,
-    __u8 data_6=0, __u8 data_7=0) {
+MCP2515::ERROR send(canid_t can_id, __u8 can_dlc, __u8 data_0,
+    __u8 data_1, __u8 data_2, __u8 data_3, __u8 data_4, __u8 data_5,
+    __u8 data_6, __u8 data_7) {
  
   msg.can_id  = can_id;
   msg.can_dlc = can_dlc;

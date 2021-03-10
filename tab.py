@@ -1,4 +1,4 @@
-import tkinter as tk    # tk.Frame, tk.Button, tk.Label
+import tkinter as tk        # tk.Frame, tk.Button, tk.Label
 from tkinter import ttk     # ttk.Treeview
 
 
@@ -12,7 +12,7 @@ class MainTab(tk.Frame):    # self -> tk.Frame
         self.btn_write.grid(row=0, column=0, ipadx=10, ipady=10)
 
         # "Read" Button
-        self.btn_read = tk.Button(self, text="Read", command=controller.read)
+        self.btn_read = tk.Button(self, text="Read")
         self.btn_read.grid(row=0, column=1, ipadx=10, ipady=10)
 
 
