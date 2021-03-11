@@ -5,6 +5,13 @@ from tkinter import ttk     # ttk.Notebook
 from tab import MainTab, TreeTab, IOTab, PDOTab
 
 
+def on_tab_selected(event):
+    tab = event.widget.tab('current')['text']
+    if tab == "Main":
+        print("You're in Main")
+        # TODO: Trigger Main tab SDO related fields
+
+
 class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
     def __init__(self, root, controller, **kwargs):
         super().__init__(root, **kwargs)
@@ -23,3 +30,6 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
 
         # Place the tab menu
         self.pack(fill=tk.BOTH, expand=True)
+
+        # Selecting a tab triggers events
+        self.bind('<<NotebookTabChanged>>', on_tab_selected)

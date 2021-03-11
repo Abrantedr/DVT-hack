@@ -12,10 +12,10 @@ class Model:
     __COM5 = "COM5"
     __COM6 = "COM6"
     __NON_BLOCKING = 0
-    __SYNC_MIN = 0.01       # 10 ms is the minimum SYNC time interval
+    __SYNC_MIN = 0.02       # 10 ms is the minimum SYNC time interval, 65 ms for the ISR
 
-    def __init__(self):
-
+    def __init__(self, controller):
+        self.controller = controller
         # Start serial communication
         try:
             self.arduino = serial.Serial(port=self.__COM3, baudrate=self.__SERIAL_BAUDRATE, bytesize=serial.EIGHTBITS,
@@ -42,8 +42,10 @@ class Model:
         exit()
 
     def write(self):
-        b = self.arduino.write(bytearray([0x05, 0x81, 0x08, 0x60, 0x00, 0x59, 0x01, 0x2B, 0x00, 0x00, 0x00]))
+        b = self.arduino.write(bytearray([0x05, 0x81, 0x08, 0x60, 0x00, 0x59, 0x01, 0x7F, 0x00, 0x00, 0x00]))
         print(f"Written {b} bytes")
+        self.controller.update_label(b)
+        # TODO: Write a well defined write-to-serial function
 
     def sniff_bus(self):
         while True:

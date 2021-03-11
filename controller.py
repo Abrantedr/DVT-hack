@@ -10,15 +10,18 @@ class Controller:
         self.root = tk.Tk()
 
         # Controller receives model and views
-        self.model = Model()
+        self.model = Model(self)
         self.menu_bar = MenuBar(self.root)
         self.main_window = MainWindow(self.root, self)  # Sends controller to main window
 
     def write(self):    # Controller calls model
         self.model.write()
 
-    def read(self):
-        self.model.read()
+    def update_label(self, b):
+        self.main_window.tab_menu.tab_main.nmt.set(b)
+
+    # def read(self):
+    #     self.model.read()
 
     def run(self):
         self.root.title("DVTH")
