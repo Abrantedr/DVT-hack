@@ -5,21 +5,18 @@ from tkinter import ttk     # ttk.Treeview
 class MainTab(tk.Frame):    # self -> tk.Frame
     def __init__(self, root, controller, *args, **kwargs):
         super().__init__(root, *args, **kwargs)
+        self.root = root
+        self.controller = controller
 
         # Main tab contents
         # NMT State Label
-        # TODO: Connect NMT field with SDO response
         self.nmt = tk.StringVar()
         self.lbl_NMT_state = tk.Label(self, text="NMT State: ").grid(row=0, column=0, padx=10, pady=10)
         self.lbl_NMT = tk.Label(self, textvariable=self.nmt).grid(row=0, column=1, padx=10, pady=10)
 
         # "Write" Button
-        self.btn_write = tk.Button(self, text="Write", command=controller.write)    # Button calls controller
+        self.btn_write = tk.Button(self, text="Write", command=lambda: self.controller.write(0x10, 0x1000, 0x20))
         self.btn_write.grid(row=1, column=0, padx=10, pady=10)
-
-        # # "Read" Button
-        # self.btn_read = tk.Button(self, text="Read")
-        # self.btn_read.grid(row=0, column=1, ipadx=10, ipady=10)
 
 
 class TreeTab(tk.Frame):    # self -> tk.Frame

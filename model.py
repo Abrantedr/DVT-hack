@@ -1,5 +1,8 @@
+import random
 import serial
 import threading
+
+from queue import Queue
 
 
 STANDARD_FRAME = 11
@@ -16,6 +19,7 @@ class Model:
 
     def __init__(self, controller):
         self.controller = controller
+
         # Start serial communication
         try:
             self.arduino = serial.Serial(port=self.__COM3, baudrate=self.__SERIAL_BAUDRATE, bytesize=serial.EIGHTBITS,
@@ -24,27 +28,26 @@ class Model:
         except serial.SerialException:
             print("The device can not be found or can not be configured")
             exit()
+        finally:
+            # Create a queue to parse input messages
+            self.queue = Queue()
 
-        # Start sniffing the CAN bus
-        self.thread_stop = threading.Event()    # Thread flag (false by default)
-        self.thread = threading.Thread(target=self.sniff_bus, daemon=True)
-        self.thread.start()
+            # Set condition to stop threads
+            self.thread_stop = threading.Event()
 
-    def on_close(self):
-        print(f"Closing {self.arduino.name}")
+            # Start sniffing the CAN bus
+            self.sniff_thread = threading.Thread(target=self.sniff_bus, daemon=True, name="Sniffer")
+            self.sniff_thread.start()
 
-        # End sniffing thread
-        # .join() is not needed
-        self.thread_stop.set()
+            # Start parsing input messages
+            self.queue_thread = threading.Thread(target=self.parse_queue, daemon=True, name="Queue Parser")
+            self.queue_thread.start()
 
-        # End serial communication
-        self.arduino.close()
-        exit()
-
-    def write(self):
-        b = self.arduino.write(bytearray([0x05, 0x81, 0x08, 0x60, 0x00, 0x59, 0x01, 0x7F, 0x00, 0x00, 0x00]))
-        print(f"Written {b} bytes")
-        self.controller.update_label(b)
+    def send(self, command, index, subindex):
+        b = self.arduino.write(bytearray(random.getrandbits(8) for _ in range(11)))
+        print(command, index, subindex)
+        # print(f"Written {b} bytes")
+        # self.controller.update_label(b)
         # TODO: Write a well defined write-to-serial function
 
     def sniff_bus(self):
@@ -52,12 +55,24 @@ class Model:
             # Get a frame
             frame = self.arduino.read(STANDARD_FRAME).hex()
 
-            # Process frame #
+            # Queue frame #
             if frame:
-                frame_list = [frame[i:i + 2] for i in range(6, len(frame), 2)]
-                msg = frame[0:4] + " " + " ".join(frame_list)
-                print(msg)
+                self.queue.put_nowait(frame)
 
             # Check if we can close the thread
             if self.thread_stop.is_set():
                 break
+
+    def parse_queue(self):
+        while True:
+            item = self.queue.get()
+            if item[-1] == "1":
+                self.controller.update_label(item)
+
+            # Check if we can close the thread
+            if self.thread_stop.is_set():
+                break
+
+    def close(self):
+        print(f"Closing port: {self.arduino.name}")
+        self.arduino.close()
