@@ -31,6 +31,9 @@ class Controller:
     def update_actual_motor_current(self, state):
         self.main_window.tab_menu.tab_main.var_current.set(state)
 
+    def update_forward_switch(self, state):
+        self.main_window.tab_menu.tab_main.var_fwd.set(state)
+
     def write(self, command, index_lsb, index_msb, sub_index, data_0=0x00, data_1=0x00, data_2=0x00, data_3=0x00):
         self.model.send(command, index_lsb, index_msb, sub_index, data_0, data_1, data_2, data_3)
 

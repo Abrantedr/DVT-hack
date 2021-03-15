@@ -35,8 +35,8 @@ void setup() {
   //  MCP2515 configuration
   mcp2515.reset();                            
   mcp2515.setBitrate(CAN_500KBPS, MCP_8MHZ);
-  mcp2515.setNormalMode();
-  //mcp2515.setLoopbackMode();
+  //mcp2515.setNormalMode();
+  mcp2515.setLoopbackMode();
 
   /*
   // TIMER1 configuration
@@ -57,9 +57,8 @@ void loop() {
   if (mcp2515.readMessage(&reply) == MCP2515::ERROR_OK) {
     rep[0] = reply.can_id >> 8;
     rep[1] = reply.can_id & 0xFF;
-    rep[2] = reply.can_dlc;
     for (int i = 0; i < reply.can_dlc; ++i) {
-      rep[i + 3] = reply.data[i];
+      rep[i + 2] = reply.data[i];
     }
     if (Serial.availableForWrite() >= STANDARD_FRAME)
       Serial.write(rep, STANDARD_FRAME);
@@ -74,7 +73,7 @@ ISR(TIMER1_OVF_vect, ISR_BLOCK) { // Anything here has to take less than 65 ms
 void serialEvent() {  // Not an ISR, it's called at the top of loop() function
   /* We have received a frame from application */
   if (Serial.readBytes(buf, STANDARD_FRAME))  // Blocks until we have read STANDARD_FRAME bytes or timeout
-    send(buf[0] << 8 | buf[1], DLC, buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+    send(buf[0] << 8 | buf[1], DLC, buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]); // There's a problem with more than 8 byte sends (?)
 }
 
  

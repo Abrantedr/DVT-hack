@@ -89,6 +89,11 @@ class Model:
                         self.controller.update_actual_velocity(str(int(item[16:18] + item[14:16], base=16)))
                     if item[8:14] == "78600":   # It's Actual Motor Current
                         self.controller.update_actual_motor_current(str(int(item[16:18] + item[14:16], base=16)))
+                    if item[8:14] == "21210":   # It's Forward Switch
+                        if item[14:16] == "00":
+                            self.controller.update_forward_switch("Disabled")
+                        elif item[14:16] == "01":
+                            self.controller.update_forward_switch("Enabled")
 
             # Check if we can close the thread
             if self.thread_stop.is_set():

@@ -51,6 +51,8 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
                 self.controller.write(0x40, 0x6C, 0x60, 0x00)   # Actual Velocity (606Ch, 0) read (0x40)
                 time.sleep(0.02)
                 self.controller.write(0x40, 0x78, 0x60, 0x00)   # Actual Motor Current (6078h, 0) read (0x40)
+                time.sleep(0.02)
+                self.controller.write(0x40, 0x21, 0x21, 0x00)   # Forward Switch (2121h, 0) read (0x40)
                 # Another SDO
                 pass
             if self.__tab_state[1]:
@@ -70,7 +72,7 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
             if self.thread_stop.is_set():
                 break
 
-            time.sleep(0.02)
+            time.sleep(0.2)
 
     def on_tab_changed(self, event):
         tab = event.widget.tab('current')['text']

@@ -34,6 +34,16 @@ class MainTab(tk.Frame):  # self -> tk.Frame
                                                                                                              0x03))
         self.btn_velocity_mode.grid(row=1, column=1, padx=10, pady=10)
 
+        # "Enable Forward Switch" Button
+        self.btn_velocity_mode = tk.Button(self, text="Enable Forward Switch",
+                                           command=lambda: self.controller.write(0x2F, 0x21, 0x21, 0x00, 0x01))
+        self.btn_velocity_mode.grid(row=1, column=2, padx=10, pady=10)
+
+        # "Disable Forward Switch" Button
+        self.btn_velocity_mode = tk.Button(self, text="Disable Forward Switch",
+                                           command=lambda: self.controller.write(0x2F, 0x21, 0x21, 0x00, 0x00))
+        self.btn_velocity_mode.grid(row=1, column=3, padx=10, pady=10)
+
         # NMT State Label
         self.var_nmt = tk.StringVar()
         self.lbl_nmt_state = tk.Label(self, text="NMT State: ").grid(row=2, column=0, padx=10, pady=10)
@@ -55,6 +65,11 @@ class MainTab(tk.Frame):  # self -> tk.Frame
         self.lbl_actual_current = tk.Label(self, text="Actual Motor Current: ").grid(row=5, column=0, padx=10, pady=10)
         self.lbl_current = tk.Label(self, textvariable=self.var_current).grid(row=5, column=1, padx=10, pady=10)
         self.lbl_current_units = tk.Label(self, text="A (RMS)").grid(row=5, column=2, padx=10, pady=10)
+
+        # Forward Switch Label
+        self.var_fwd = tk.StringVar()
+        self.lbl_forward_switch = tk.Label(self, text="Forward Switch: ").grid(row=6, column=0, padx=10, pady=10)
+        self.lbl_fwd = tk.Label(self, textvariable=self.var_current).grid(row=6, column=1, padx=10, pady=10)
 
 
 class TreeTab(tk.Frame):  # self -> tk.Frame
