@@ -34,25 +34,42 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
         self.thread_stop = threading.Event()
 
         # Set on tab selection conditions
-        self.__tab_state = (True, False, False, False)  # On Main tab by default
+        # On Main tab by default
+        self.__tab_state = (True, False, False, False)
 
         # Start SDO request thread
-        self.main_tab_sdo_thread = threading.Thread(target=self.sdo_request, name="SDO Requests")
+        self.main_tab_sdo_thread = threading.Thread(target=self.sdo_request,
+                                                    name="SDO Requests")
         self.main_tab_sdo_thread.start()
 
     def sdo_request(self):
         while True:
             # Keep sending these specific SDOs while we are in Main tab
             if self.__tab_state[0]:
-                self.controller.write(0x40, 0x10, 0x51, 0x00)   # NMT State (5110h, 0) read (0x40)
+                # NMT State (5110h, 0) read (0x40)
+                self.controller.write(0x40, 0x10, 0x51, 0x00)
                 time.sleep(0.02)
-                self.controller.write(0x40, 0x61, 0x60, 0x00)   # Operational Mode (6061h, 0) read (0x40)
+                # Operational Mode (6061h, 0) read (0x40)
+                self.controller.write(0x40, 0x61, 0x60, 0x00)
                 time.sleep(0.02)
-                self.controller.write(0x40, 0x6C, 0x60, 0x00)   # Actual Velocity (606Ch, 0) read (0x40)
+                # Actual Velocity (606Ch, 0) read (0x40)
+                self.controller.write(0x40, 0x6C, 0x60, 0x00)
                 time.sleep(0.02)
-                self.controller.write(0x40, 0x78, 0x60, 0x00)   # Actual Motor Current (6078h, 0) read (0x40)
+                # Actual Motor Current (6078h, 0) read (0x40)
+                self.controller.write(0x40, 0x78, 0x60, 0x00)
                 time.sleep(0.02)
-                self.controller.write(0x40, 0x21, 0x21, 0x00)   # Forward Switch (2121h, 0) read (0x40)
+                # Forward Switch (2121h, 0) read (0x40)
+                self.controller.write(0x40, 0x21, 0x21, 0x00)
+                time.sleep(0.02)
+                # FS1 Switch (2123h, 0) read (0x40)
+                self.controller.write(0x40, 0x23, 0x21, 0x00)
+                time.sleep(0.02)
+                # Seat Switch (2124h, 0) read (0x40)
+                self.controller.write(0x40, 0x24, 0x21, 0x00)
+                time.sleep(0.02)
+                # Max Motor Speed (6080h, 0) read (0x40)
+                self.controller.write(0x40, 0x80, 0x60, 0x00)
+                time.sleep(0.02)
                 # Another SDO
                 pass
             if self.__tab_state[1]:
@@ -72,7 +89,7 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
             if self.thread_stop.is_set():
                 break
 
-            time.sleep(0.2)
+            time.sleep(0.1)
 
     def on_tab_changed(self, event):
         tab = event.widget.tab('current')['text']

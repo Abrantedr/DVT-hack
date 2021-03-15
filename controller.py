@@ -17,7 +17,7 @@ class Controller:
         # Controller receives model and views
         self.model = Model(self)
         self.menu_bar = MenuBar(self.root)
-        self.main_window = MainWindow(self.root, self)  # Sends controller to main window
+        self.main_window = MainWindow(self.root, self)
 
     def update_nmt_state(self, state):
         self.main_window.tab_menu.tab_main.var_nmt.set(state)
@@ -34,12 +34,25 @@ class Controller:
     def update_forward_switch(self, state):
         self.main_window.tab_menu.tab_main.var_fwd.set(state)
 
-    def write(self, command, index_lsb, index_msb, sub_index, data_0=0x00, data_1=0x00, data_2=0x00, data_3=0x00):
-        self.model.send(command, index_lsb, index_msb, sub_index, data_0, data_1, data_2, data_3)
+    def update_fs_switch(self, state):
+        self.main_window.tab_menu.tab_main.var_fs.set(state)
 
-    def set_operational_state(self, state, node, command, index_lsb, index_msb, sub_index, data_0=0x00, data_1=0x00,
+    def update_seat_switch(self, state):
+        self.main_window.tab_menu.tab_main.var_seat.set(state)
+
+    def update_max_speed(self, state):
+        self.main_window.tab_menu.tab_main.var_max_speed.set(state)
+
+    def write(self, command, index_lsb, index_msb, sub_index, data_0=0x00,
+              data_1=0x00, data_2=0x00, data_3=0x00):
+        self.model.send(command, index_lsb, index_msb, sub_index, data_0,
+                        data_1, data_2, data_3)
+
+    def set_operational_state(self, state, node, command, index_lsb, index_msb,
+                              sub_index, data_0=0x00, data_1=0x00,
                               data_2=0x00, data_3=0x00):
-        self.model.send(command, index_lsb, index_msb, sub_index, data_0, data_1, data_2, data_3)
+        self.model.send(command, index_lsb, index_msb, sub_index, data_0,
+                        data_1, data_2, data_3)
         time.sleep(0.05)
         self.model.nmt_send(state, node)
 
