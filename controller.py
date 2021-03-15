@@ -1,4 +1,5 @@
 import tkinter as tk
+import time
 
 # Model
 from model import Model
@@ -18,14 +19,26 @@ class Controller:
         self.menu_bar = MenuBar(self.root)
         self.main_window = MainWindow(self.root, self)  # Sends controller to main window
 
-    def write(self, command, index, subindex):    # Controller calls model
-        self.model.send(command, index, subindex)
+    def update_nmt_state(self, state):
+        self.main_window.tab_menu.tab_main.var_nmt.set(state)
 
-    def update_label(self, b):
-        self.main_window.tab_menu.tab_main.nmt.set(b)
+    def update_operational_mode(self, state):
+        self.main_window.tab_menu.tab_main.var_mode.set(state)
 
-    def parse_queue(self):
-        pass
+    def update_actual_velocity(self, state):
+        self.main_window.tab_menu.tab_main.var_vel.set(state)
+
+    def update_actual_motor_current(self, state):
+        self.main_window.tab_menu.tab_main.var_current.set(state)
+
+    def write(self, command, index_lsb, index_msb, sub_index, data_0=0x00, data_1=0x00, data_2=0x00, data_3=0x00):
+        self.model.send(command, index_lsb, index_msb, sub_index, data_0, data_1, data_2, data_3)
+
+    def set_operational_state(self, state, node, command, index_lsb, index_msb, sub_index, data_0=0x00, data_1=0x00,
+                              data_2=0x00, data_3=0x00):
+        self.model.send(command, index_lsb, index_msb, sub_index, data_0, data_1, data_2, data_3)
+        time.sleep(0.05)
+        self.model.nmt_send(state, node)
 
     def on_close(self):
         # Set stop conditions for all threads

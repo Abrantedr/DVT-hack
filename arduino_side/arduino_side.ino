@@ -8,9 +8,11 @@
 
 // To CAN bus
 struct can_frame msg, reply;
+
 // To serial
 byte buf[STANDARD_FRAME];
-byte b;
+byte rep[STANDARD_FRAME];
+
 // MCP2515 Constructor
 MCP2515 mcp2515(10);
 
@@ -32,9 +34,11 @@ void setup() {
   
   //  MCP2515 configuration
   mcp2515.reset();                            
-  mcp2515.setBitrate(CAN_1000KBPS, MCP_8MHZ);
+  mcp2515.setBitrate(CAN_500KBPS, MCP_8MHZ);
   mcp2515.setNormalMode();
-  
+  //mcp2515.setLoopbackMode();
+
+  /*
   // TIMER1 configuration
   // Overflow @65.54 ms
   TCCR1B = 0x00;                  // Stop the timer
@@ -42,28 +46,35 @@ void setup() {
   TCCR1A = 0x00;                  // Normal operation
   TCCR1B |= (1 << CS11);          // Prescaler clkI/O/8
   TIMSK1 |= (1 << TOIE1);         // Enable overflow interrupts
+  */
   
   sei();                          // Enable global interrupts
 }
 
 
 void loop() {
-  // Nothing here
+  /* Reads a CAN message */
+  if (mcp2515.readMessage(&reply) == MCP2515::ERROR_OK) {
+    rep[0] = reply.can_id >> 8;
+    rep[1] = reply.can_id & 0xFF;
+    rep[2] = reply.can_dlc;
+    for (int i = 0; i < reply.can_dlc; ++i) {
+      rep[i + 3] = reply.data[i];
+    }
+    if (Serial.availableForWrite() >= STANDARD_FRAME)
+      Serial.write(rep, STANDARD_FRAME);
+  }
 }
 
-
+/*
 ISR(TIMER1_OVF_vect, ISR_BLOCK) { // Anything here has to take less than 65 ms
-  /* Sniff CAN and send back to application */ 
 }
+*/
 
 void serialEvent() {  // Not an ISR, it's called at the top of loop() function
   /* We have received a frame from application */
-  if (Serial.readBytes(buf, STANDARD_FRAME)){ // Blocks until we have read STANDARD_FRAME bytes or timeout
-    /* Send frame to CAN bus */
+  if (Serial.readBytes(buf, STANDARD_FRAME))  // Blocks until we have read STANDARD_FRAME bytes or timeout
     send(buf[0] << 8 | buf[1], DLC, buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
-    if (Serial.availableForWrite() >= STANDARD_FRAME)
-      Serial.write(buf, STANDARD_FRAME);
-  }
 }
 
  

@@ -13,7 +13,7 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
         self.controller = controller
 
         # Create tabs
-        self.tab_main = MainTab(self, controller)   # Sends controller to main tab
+        self.tab_main = MainTab(self, controller)
         self.tab_tree = TreeTab(self)
         self.tab_io = IOTab(self)
         self.tab_pdo = PDOTab(self)
@@ -34,7 +34,7 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
         self.thread_stop = threading.Event()
 
         # Set on tab selection conditions
-        self.__tab_state = (True, False, False, False)
+        self.__tab_state = (True, False, False, False)  # On Main tab by default
 
         # Start SDO request thread
         self.main_tab_sdo_thread = threading.Thread(target=self.sdo_request, name="SDO Requests")
@@ -44,9 +44,15 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
         while True:
             # Keep sending these specific SDOs while we are in Main tab
             if self.__tab_state[0]:
-                self.controller.write(0x40, 0x5110, 0x00)
+                self.controller.write(0x40, 0x10, 0x51, 0x00)   # NMT State (5110h, 0) read (0x40)
+                time.sleep(0.02)
+                self.controller.write(0x40, 0x61, 0x60, 0x00)   # Operational Mode (6061h, 0) read (0x40)
+                time.sleep(0.02)
+                self.controller.write(0x40, 0x6C, 0x60, 0x00)   # Actual Velocity (606Ch, 0) read (0x40)
+                time.sleep(0.02)
+                self.controller.write(0x40, 0x78, 0x60, 0x00)   # Actual Motor Current (6078h, 0) read (0x40)
                 # Another SDO
-                # Another SDO
+                pass
             if self.__tab_state[1]:
                 pass
                 # Another SDO
@@ -64,7 +70,7 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
             if self.thread_stop.is_set():
                 break
 
-            time.sleep(0.5)
+            time.sleep(0.02)
 
     def on_tab_changed(self, event):
         tab = event.widget.tab('current')['text']
