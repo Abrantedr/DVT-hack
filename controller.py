@@ -19,6 +19,9 @@ class Controller:
         self.menu_bar = MenuBar(self.root)
         self.main_window = MainWindow(self.root, self)
 
+    def send_credentials(self):
+        self.model.send(0x2B, 0x00, 0x50, 0x02, 0xDF, 0x4B, 0xEF, 0xFA)
+
     def update_nmt_state(self, state):
         self.main_window.tab_menu.tab_main.var_nmt.set(state)
 
@@ -30,6 +33,9 @@ class Controller:
 
     def update_actual_motor_current(self, state):
         self.main_window.tab_menu.tab_main.var_current.set(state)
+
+    def update_reverse_switch(self, state):
+        self.main_window.tab_menu.tab_main.var_rev.set(state)
 
     def update_forward_switch(self, state):
         self.main_window.tab_menu.tab_main.var_fwd.set(state)
@@ -48,9 +54,19 @@ class Controller:
         self.model.send(command, index_lsb, index_msb, sub_index, data_0,
                         data_1, data_2, data_3)
 
+    def set_operational_mode(self, command, index_lsb, index_msb,
+                             sub_index, data_0=0x00, data_1=0x00, data_2=0x00,
+                             data_3=0x00):
+        self.send_credentials()
+        time.sleep(0.05)
+        self.model.send(command, index_lsb, index_msb, sub_index, data_0,
+                        data_1, data_2, data_3)
+
     def set_operational_state(self, state, node, command, index_lsb, index_msb,
-                              sub_index, data_0=0x00, data_1=0x00,
-                              data_2=0x00, data_3=0x00):
+                              sub_index, data_0=0x00, data_1=0x00, data_2=0x00,
+                              data_3=0x00):
+        self.send_credentials()
+        time.sleep(0.05)
         self.model.send(command, index_lsb, index_msb, sub_index, data_0,
                         data_1, data_2, data_3)
         time.sleep(0.05)
@@ -70,7 +86,7 @@ class Controller:
 
     def run(self):
         self.root.title("DVTH")
-        self.root.geometry("800x800")
+        self.root.geometry("600x800")
         self.root.deiconify()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.config(menu=self.menu_bar)

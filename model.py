@@ -1,6 +1,5 @@
 import serial
 import threading
-import time
 
 from queue import Queue
 
@@ -52,11 +51,6 @@ class Model:
                                                  name="Queue Parser")
             self.queue_thread.start()
 
-            # Set credentials
-            time.sleep(4)
-            # TODO: send password before accessing level 4 fields
-            self.send(0x2B, 0x00, 0x50, 0x02, 0xDF, 0x4B, 0xEF, 0xFA)
-
     def send(self, command, index_lsb, index_msb, sub_index, data_0=0x00,
              data_1=0x00, data_2=0x00, data_3=0x00):
         self.arduino.write(bytearray([SDO_MSB, SDO_LSB, DLC, command,
@@ -83,54 +77,80 @@ class Model:
     def parse_queue(self):
         while True:
             item = self.queue.get()
-            if item[:4] == "0581":     # We caught a response from Gen4
-                if item[6:8] == "4f":  # It was a successful 1 byte read
-                    if item[8:14] == "105100":  # It's NMT State
-                        if item[14:16] == "04":
+
+            # Extract frame fields
+            cob_id = item[:4]
+            command = item[6:8]
+            index = item[8:14]
+
+            # Data bytes
+            byte_one = item[14:16]      # LSB
+            byte_two = item[16:18]
+            byte_three = item[18:20]
+            byte_four = item[20:22]     # MSB
+
+            # Sort message
+            if cob_id == "0581":     # We caught a response from Gen4
+                if command == "4f":  # It was a successful 1 byte read
+                    if index == "105100":  # It's NMT State
+                        if byte_one == "04":
                             self.controller.update_nmt_state("Stopped")
-                        elif item[14:16] == "05":
+                        elif byte_one == "05":
                             self.controller.update_nmt_state("Operational")
-                        elif item[14:16] == "7f":
+                        elif byte_one == "7f":
                             self.controller.update_nmt_state("Pre-Operational")
-                    if item[8:14] == "616000":  # It's Operational Mode
-                        if item[14:16] == "03":
+
+                    if index == "616000":  # It's Operational Mode
+                        if byte_one == "03":
                             self.controller.update_operational_mode(
                                 "Speed Mode")
-                        elif item[14:16] == "04":
+                        elif byte_one == "04":
                             self.controller.update_operational_mode(
                                 "Torque Mode")
-                        elif item[14:16] == "05":
+                        elif byte_one == "05":
                             self.controller.update_operational_mode(
                                 "Open Loop Speed Mode")
-                    if item[8:14] == "212100":   # It's Forward Switch
-                        if item[14:16] == "00":
+
+                    if index == "222100":   # It's Reverse Switch
+                        if byte_one == "00":
+                            self.controller.update_reverse_switch("Disabled")
+                        elif byte_one == "01":
+                            self.controller.update_reverse_switch("Enabled")
+
+                    if index == "212100":   # It's Forward Switch
+                        if byte_one == "00":
                             self.controller.update_forward_switch("Disabled")
-                        elif item[14:16] == "01":
+                        elif byte_one == "01":
                             self.controller.update_forward_switch("Enabled")
-                    if item[8:14] == "232100":   # It's FS1 Switch
-                        if item[14:16] == "00":
+
+                    if index == "232100":   # It's FS1 Switch
+                        if byte_one == "00":
                             self.controller.update_fs_switch("Disabled")
-                        elif item[14:16] == "01":
+                        elif byte_one == "01":
                             self.controller.update_fs_switch("Enabled")
-                    if item[8:14] == "242100":   # It's Seat Switch
-                        if item[14:16] == "00":
+
+                    if index == "242100":   # It's Seat Switch
+                        if byte_one == "00":
                             self.controller.update_seat_switch("Disabled")
-                        elif item[14:16] == "01":
+                        elif byte_one == "01":
                             self.controller.update_seat_switch("Enabled")
-                if item[6:8] == "4b":
-                    if item[8:14] == "786000":   # It's Act. Motor Curr.
+
+                if command == "4b":
+                    if index == "786000":   # It's Act. Motor Curr.
                         self.controller.update_actual_motor_current(
-                            str(int(item[16:18] + item[14:16], base=16)))
-                if item[6:8] == "43":
-                    if item[8:14] == "6c6000":   # It's Actual Velocity
+                            str(int(byte_two + byte_one, base=16)))
+
+                if command == "43":
+                    if index == "6c6000":   # It's Actual Velocity
                         self.controller.update_actual_velocity(
-                            str(int(item[20:22] + item[18:20] + item[16:18] +
-                                    item[14:16], base=16)))
-                    if item[8:14] == "806000":   # It's Max Motor Speed
-                        self.controller.update_max_speed(str(int(item[20:22] +
-                                                                 item[18:20] +
-                                                                 item[16:18] +
-                                                                 item[14:16],
+                            str(int(byte_four + byte_three + byte_two +
+                                    byte_one, base=16)))
+
+                    if index == "806000":   # It's Max Motor Speed
+                        self.controller.update_max_speed(str(int(byte_four +
+                                                                 byte_three +
+                                                                 byte_two +
+                                                                 byte_one,
                                                                  base=16)))
 
             # Check if we can close the thread

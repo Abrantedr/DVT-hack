@@ -9,10 +9,15 @@ class MainTab(tk.Frame):  # self -> tk.Frame
         self.controller = controller
 
         # Main tab contents
+        self.var_op = tk.IntVar()
+        # TODO: write radio buttons features
         # "Set Pre-Operational" Button
-        self.btn_pre_operational = tk.Button(
+        self.btn_pre_operational = tk.Radiobutton(
             self,
             text="Set Pre-Operational",
+            variable=self.var_op,
+            value=1,
+            indicatoron=0,
             command=lambda: self.controller.set_operational_state(0x80, 0x01,
                                                                   0x2F, 0x00,
                                                                   0x28, 0x00,
@@ -20,77 +25,105 @@ class MainTab(tk.Frame):  # self -> tk.Frame
         self.btn_pre_operational.grid(row=0, column=0, padx=10, pady=10)
 
         # "Set Operational" Button
-        self.btn_operational = tk.Button(
+        self.btn_operational = tk.Radiobutton(
             self,
             text="Set Operational",
+            variable=self.var_op,
+            value=2,
+            indicatoron=0,
             command=lambda: self.controller.set_operational_state(0x01, 0x01,
                                                                   0x2F, 0x00,
                                                                   0x28, 0x00))
         self.btn_operational.grid(row=0, column=1, padx=10, pady=10)
 
+        self.var_mode = tk.IntVar()
         # "Torque Mode" Button
-        self.btn_torque_mode = tk.Button(
+        self.btn_torque_mode = tk.Radiobutton(
             self,
             text="Torque Mode",
-            command=lambda: self.controller.write(0x2F, 0x60, 0x60, 0x00,
-                                                  0x04))
+            variable=self.var_mode,
+            value=1,
+            indicatoron=0,
+            command=lambda: self.controller.set_operational_mode(0x2F, 0x60,
+                                                                 0x60, 0x00,
+                                                                 0x04))
         self.btn_torque_mode.grid(row=1, column=0, padx=10, pady=10)
 
         # "Velocity Mode" Button
-        self.btn_velocity_mode = tk.Button(
+        self.btn_velocity_mode = tk.Radiobutton(
             self,
             text="Velocity Mode",
-            command=lambda: self.controller.write(0x2F, 0x60, 0x60, 0x00,
-                                                  0x03))
+            variable=self.var_mode,
+            value=2,
+            indicatoron=0,
+            command=lambda: self.controller.set_operational_mode(0x2F, 0x60,
+                                                                 0x60, 0x00,
+                                                                 0x03))
         self.btn_velocity_mode.grid(row=1, column=1, padx=10, pady=10)
 
+        # "Enable Reverse Switch" Button
+        self.btn_en_reverse_switch = tk.Button(
+            self,
+            text="Enable Reverse Switch",
+            command=lambda: self.controller.write(0x2F, 0x22, 0x21, 0x00,
+                                                  0x01))
+        self.btn_en_reverse_switch.grid(row=0, column=2, padx=10, pady=10)
+
+        # "Disable Reverse Switch" Button
+        self.btn_dis_reverse_switch = tk.Button(
+            self,
+            text="Disable Reverse Switch",
+            command=lambda: self.controller.write(0x2F, 0x22, 0x21, 0x00,
+                                                  0x00))
+        self.btn_dis_reverse_switch.grid(row=0, column=3, padx=10, pady=10)
+
         # "Enable Forward Switch" Button
-        self.btn_velocity_mode = tk.Button(
+        self.btn_en_forward_switch = tk.Button(
             self,
             text="Enable Forward Switch",
             command=lambda: self.controller.write(0x2F, 0x21, 0x21, 0x00,
                                                   0x01))
-        self.btn_velocity_mode.grid(row=1, column=2, padx=10, pady=10)
+        self.btn_en_forward_switch.grid(row=1, column=2, padx=10, pady=10)
 
         # "Disable Forward Switch" Button
-        self.btn_velocity_mode = tk.Button(
+        self.btn_dis_forward_switch = tk.Button(
             self,
             text="Disable Forward Switch",
             command=lambda: self.controller.write(0x2F, 0x21, 0x21, 0x00,
                                                   0x00))
-        self.btn_velocity_mode.grid(row=1, column=3, padx=10, pady=10)
+        self.btn_dis_forward_switch.grid(row=1, column=3, padx=10, pady=10)
 
         # "Enable FS Switch" Button
-        self.btn_fs_switch = tk.Button(
+        self.btn_en_fs_switch = tk.Button(
             self,
             text="Enable FS Switch",
             command=lambda: self.controller.write(0x2F, 0x23, 0x21, 0x00,
                                                   0x01))
-        self.btn_fs_switch.grid(row=2, column=2, padx=10, pady=10)
+        self.btn_en_fs_switch.grid(row=2, column=2, padx=10, pady=10)
 
         # "Disable FS Switch" Button
-        self.btn_fs_switch = tk.Button(
+        self.btn_dis_fs_switch = tk.Button(
             self,
             text="Disable FS Switch",
             command=lambda: self.controller.write(0x2F, 0x23, 0x21, 0x00,
                                                   0x00))
-        self.btn_fs_switch.grid(row=2, column=3, padx=10, pady=10)
+        self.btn_dis_fs_switch.grid(row=2, column=3, padx=10, pady=10)
 
         # "Enable Seat Switch" Button
-        self.btn_seat_switch = tk.Button(
+        self.btn_en_seat_switch = tk.Button(
             self,
             text="Enable Seat Switch",
             command=lambda: self.controller.write(0x2F, 0x24, 0x21, 0x00,
                                                   0x01))
-        self.btn_seat_switch.grid(row=3, column=2, padx=10, pady=10)
+        self.btn_en_seat_switch.grid(row=3, column=2, padx=10, pady=10)
 
         # "Disable Seat Switch" Button
-        self.btn_seat_switch = tk.Button(
+        self.btn_dis_seat_switch = tk.Button(
             self,
             text="Disable Seat Switch",
             command=lambda: self.controller.write(0x2F, 0x24, 0x21, 0x00,
                                                   0x00))
-        self.btn_seat_switch.grid(row=3, column=3, padx=10, pady=10)
+        self.btn_dis_seat_switch.grid(row=3, column=3, padx=10, pady=10)
 
         # "Maximum Motor Speed" Button
         self.btn_max_speed = tk.Button(
@@ -98,7 +131,7 @@ class MainTab(tk.Frame):  # self -> tk.Frame
             text="Set Max Motor Speed",
             command=lambda: self.controller.write(0x23, 0x80, 0x60, 0x00,
                                                   0xFF, 0x0F))
-        self.btn_max_speed.grid(row=4, column=4, padx=10, pady=10)
+        self.btn_max_speed.grid(row=11, column=0, padx=10, pady=10)
 
         # NMT State Label
         self.var_nmt = tk.StringVar()
@@ -133,34 +166,41 @@ class MainTab(tk.Frame):  # self -> tk.Frame
         self.lbl_current_units.grid(row=5, column=2, padx=10, pady=10)
 
         # Forward Switch Label
+        self.var_rev = tk.StringVar()
+        self.lbl_reverse_switch = tk.Label(self, text="Reverse Switch: ")
+        self.lbl_reverse_switch.grid(row=6, column=0, padx=10, pady=10)
+        self.lbl_rev = tk.Label(self, textvariable=self.var_rev)
+        self.lbl_rev.grid(row=6, column=1, padx=10, pady=10)
+
+        # Forward Switch Label
         self.var_fwd = tk.StringVar()
         self.lbl_forward_switch = tk.Label(self, text="Forward Switch: ")
-        self.lbl_forward_switch.grid(row=6, column=0, padx=10, pady=10)
+        self.lbl_forward_switch.grid(row=7, column=0, padx=10, pady=10)
         self.lbl_fwd = tk.Label(self, textvariable=self.var_fwd)
-        self.lbl_fwd.grid(row=6, column=1, padx=10, pady=10)
+        self.lbl_fwd.grid(row=7, column=1, padx=10, pady=10)
 
         # FS1 Switch Label
         self.var_fs = tk.StringVar()
         self.lbl_fs_switch = tk.Label(self, text="FS1 Switch: ")
-        self.lbl_fs_switch.grid(row=7, column=0, padx=10, pady=10)
+        self.lbl_fs_switch.grid(row=8, column=0, padx=10, pady=10)
         self.lbl_fs = tk.Label(self, textvariable=self.var_fs)
-        self.lbl_fs.grid(row=7, column=1, padx=10, pady=10)
+        self.lbl_fs.grid(row=8, column=1, padx=10, pady=10)
 
         # Seat Switch Label
         self.var_seat = tk.StringVar()
         self.lbl_seat_switch = tk.Label(self, text="Seat Switch: ")
-        self.lbl_seat_switch.grid(row=8, column=0, padx=10, pady=10)
+        self.lbl_seat_switch.grid(row=9, column=0, padx=10, pady=10)
         self.lbl_seat = tk.Label(self, textvariable=self.var_seat)
-        self.lbl_seat.grid(row=8, column=1, padx=10, pady=10)
+        self.lbl_seat.grid(row=9, column=1, padx=10, pady=10)
 
         # Max Motor Speed Label
         self.var_max_speed = tk.StringVar()
         self.lbl_max_motor_speed = tk.Label(self, text="Max Motor Speed: ")
-        self.lbl_max_motor_speed.grid(row=9, column=0, padx=10, pady=10)
+        self.lbl_max_motor_speed.grid(row=10, column=0, padx=10, pady=10)
         self.lbl_max_speed = tk.Label(self, textvariable=self.var_max_speed)
-        self.lbl_max_speed.grid(row=9, column=1, padx=10, pady=10)
+        self.lbl_max_speed.grid(row=10, column=1, padx=10, pady=10)
         self.lbl_max_speed_units = tk.Label(self, text="RPM")
-        self.lbl_max_speed_units.grid(row=9, column=2, padx=10, pady=10)
+        self.lbl_max_speed_units.grid(row=10, column=2, padx=10, pady=10)
 
 
 class TreeTab(tk.Frame):  # self -> tk.Frame
