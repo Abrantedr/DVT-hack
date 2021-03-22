@@ -1,6 +1,10 @@
 import serial
 import threading
+import logging as log
 
+from os.path import isdir
+from os import mkdir
+from time import strftime
 from queue import Queue
 
 # CAN constants
@@ -22,15 +26,31 @@ class Model:
     def __init__(self, controller):
         self.controller = controller
 
+        # Set path and extension for log files
+        path = "./log/"
+        ext = ".log"
+        # Create directory for logs
+        if not isdir(path):
+            mkdir(path)
+
+        # Create logger
+        date_time = strftime("%d-%m-%Y-%I-%M-%S")
+        log.basicConfig(
+            format="%(asctime)s:%(levelname)s:%(message)s",
+            filename=path + date_time + ext,
+            datefmt="%d/%m/%Y %I:%M:%S %p",
+            level=log.INFO
+        )
+
         # Start serial communication
         try:
             self.arduino = serial.Serial(port=self.__COM3,
                                          baudrate=self.__SERIAL_BAUDRATE,
                                          bytesize=serial.EIGHTBITS,
                                          timeout=self.__SYNC)
-            print(f"Port connected: {self.arduino.name}")
+            log.info(f"Port connected: {self.arduino.name}")
         except serial.SerialException:
-            print("The device can not be found or can not be configured")
+            log.info("The device can not be found or can not be configured")
             exit()
         finally:
             # Create a queue to parse input messages
@@ -82,7 +102,6 @@ class Model:
             cob_id = item[:4]
             command = item[6:8]
             index = item[8:14]
-
             # Data bytes
             byte_one = item[14:16]      # LSB
             byte_two = item[16:18]
@@ -137,11 +156,13 @@ class Model:
 
                 if command == "4b":
                     if index == "786000":   # It's Act. Motor Curr.
+                        # TODO: It's not actually working atm.
                         self.controller.update_actual_motor_current(
                             str(int(byte_two + byte_one, base=16)))
 
                 if command == "43":
                     if index == "6c6000":   # It's Actual Velocity
+                        # TODO: Doesn't work in reverse mode
                         self.controller.update_actual_velocity(
                             str(int(byte_four + byte_three + byte_two +
                                     byte_one, base=16)))
@@ -158,5 +179,5 @@ class Model:
                 break
 
     def close(self):
-        print(f"Closing port: {self.arduino.name}")
+        log.info(f"Closing port: {self.arduino.name}")
         self.arduino.close()
