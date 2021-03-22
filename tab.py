@@ -1,4 +1,5 @@
 import tkinter as tk  # tk.Frame, tk.Button, tk.Label, tk.Entry
+
 from tkinter import ttk  # ttk.Treeview
 
 
@@ -234,10 +235,18 @@ class IOTab(tk.Frame):  # self -> tk.Frame
 
 
 class PDOTab(tk.Frame):  # self -> tk.Frame
-    def __init__(self, root, *args, **kwargs):
+    def __init__(self, root, controller, *args, **kwargs):
         tk.Frame.__init__(self, root, *args, **kwargs)
         self.root = root
+        self.controller = controller
 
         # Contents of IOTab below
         self.lbl_pdo = tk.Label(self, text="PDO Tab")
         self.lbl_pdo.pack()
+
+        # "Run Circuit" Button
+        self.btn_run_circuit = tk.Button(
+            self,
+            text="Run Circuit",
+            command=self.controller.thread_run_circuit)
+        self.btn_run_circuit.pack()

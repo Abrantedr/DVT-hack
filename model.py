@@ -2,8 +2,8 @@ import serial
 import threading
 import logging as log
 
-from os.path import isdir
 from os import mkdir
+from os.path import isdir
 from time import strftime
 from queue import Queue
 
@@ -34,11 +34,11 @@ class Model:
             mkdir(path)
 
         # Create logger
-        date_time = strftime("%d-%m-%Y-%I-%M-%S")
+        date_time = strftime("%d-%m-%Y-%H-%M-%S-%p")
         log.basicConfig(
-            format="%(asctime)s:%(levelname)s:%(message)s",
+            format="%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s",
             filename=path + date_time + ext,
-            datefmt="%d/%m/%Y %I:%M:%S %p",
+            datefmt="%d/%m/%Y %H:%M:%S",
             level=log.INFO
         )
 

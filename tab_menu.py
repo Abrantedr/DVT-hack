@@ -13,10 +13,10 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
         self.controller = controller
 
         # Create tabs
-        self.tab_main = MainTab(self, controller)
+        self.tab_main = MainTab(self, self.controller)
         self.tab_tree = TreeTab(self)
         self.tab_io = IOTab(self)
-        self.tab_pdo = PDOTab(self)
+        self.tab_pdo = PDOTab(self, self.controller)
 
         # Add tabs to notebook
         self.add(self.tab_main, text="Main")
