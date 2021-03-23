@@ -1,10 +1,10 @@
+import csv
 import serial
-import threading
+import time
 import logging as log
 
 from os import mkdir
 from os.path import isdir
-from time import strftime
 from queue import Queue
 
 # CAN constants
@@ -34,7 +34,7 @@ class Model:
             mkdir(path)
 
         # Create logger
-        date_time = strftime("%d-%m-%Y-%H-%M-%S-%p")
+        date_time = time.strftime("%d-%m-%Y-%H-%M-%S-%p")
         log.basicConfig(
             format="%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s",
             filename=path + date_time + ext,
@@ -56,21 +56,6 @@ class Model:
             # Create a queue to parse input messages
             self.queue = Queue()
 
-            # Set condition to stop threads
-            self.thread_stop = threading.Event()
-
-            # Start sniffing the CAN bus
-            self.sniff_thread = threading.Thread(target=self.sniff_bus,
-                                                 daemon=True,
-                                                 name="Sniffer")
-            self.sniff_thread.start()
-
-            # Start parsing input messages
-            self.queue_thread = threading.Thread(target=self.parse_queue,
-                                                 daemon=True,
-                                                 name="Queue Parser")
-            self.queue_thread.start()
-
     def send(self, command, index_lsb, index_msb, sub_index, data_0=0x00,
              data_1=0x00, data_2=0x00, data_3=0x00):
         self.arduino.write(bytearray([SDO_MSB, SDO_LSB, DLC, command,
@@ -80,6 +65,55 @@ class Model:
     def nmt_send(self, state, node):
         self.arduino.write(bytearray([0x00, 0x02, state, node, 0x00, 0x00,
                                       0x00, 0x00, 0x00, 0x00, 0x00]))
+
+    def send_credentials(self):
+        self.send(0x2B, 0x00, 0x50, 0x02, 0xDF, 0x4B, 0xEF, 0xFA)
+
+    def run_circuit(self):
+        """
+        Tool for executing a simulated lap in the ENGIRO MS1920
+        Iván Rodríguez Méndez <irodrigu@ull.edu.es> 2021
+        """
+        last_time = 0
+
+        self.send_credentials()
+        # Get ready to send targets
+        self.send(0x2B, 0x40, 0x60, 0x00, 0x06)           # Disable model
+        time.sleep(0.02)
+        self.send(0x2B, 0x40, 0x60, 0x00, 0x07)
+        time.sleep(0.02)
+        self.send(0x2B, 0x40, 0x60, 0x00, 0x0f)     # Enable model
+        time.sleep(0.02)
+
+        filename = "Motorland-lap.csv"
+        try:
+            with open(filename, 'r') as file:
+                reader = csv.reader(file)
+
+                # Skip (3) headers
+                for headers in range(0, 3):
+                    next(reader)
+
+                for row in reader:
+                    log.info(f"Time:{row[1][:5]}\tSpeed:{row[0][:6]}\t"
+                             f"Distance:{row[2][:2]}\tRPM:{row[5][:4]}\t"
+                             f"Torque:{row[6][:5]}")
+
+                    # Extract torque
+                    # TODO: Calculate torque
+                    torque_lsb = 0x00
+                    torque_msb = 0x00
+                    self.send(0x2B, 0x71, 0x60, 0x00, torque_lsb, torque_msb)
+
+                    # Wait for next torque demand
+                    time.sleep(float(row[1]) - last_time)
+                    last_time = float(row[1])
+
+                    # Check if we can close the thread
+                    if self.controller.thread_stop.is_set():
+                        break
+        except FileNotFoundError:
+            log.info(f"No such file or directory: {filename}")
 
     def sniff_bus(self):
         while True:
@@ -91,7 +125,7 @@ class Model:
                 self.queue.put_nowait(frame)
 
             # Check if we can close the thread
-            if self.thread_stop.is_set():
+            if self.controller.thread_stop.is_set():
                 break
 
     def parse_queue(self):
@@ -156,7 +190,7 @@ class Model:
 
                 if command == "4b":
                     if index == "786000":   # It's Act. Motor Curr.
-                        # TODO: It's not actually working atm.
+                        # TODO: It's not actually working atm. (?)
                         self.controller.update_actual_motor_current(
                             str(int(byte_two + byte_one, base=16)))
 
@@ -175,7 +209,7 @@ class Model:
                                                                  base=16)))
 
             # Check if we can close the thread
-            if self.thread_stop.is_set():
+            if self.controller.thread_stop.is_set():
                 break
 
     def close(self):

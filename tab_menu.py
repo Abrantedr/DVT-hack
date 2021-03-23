@@ -43,6 +43,7 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
         self.main_tab_sdo_thread.start()
 
     def sdo_request(self):
+        # TODO: Refactor thread to controller
         while True:
             # Keep sending these specific SDOs while we are in Main tab
             if self.__tab_state[0]:

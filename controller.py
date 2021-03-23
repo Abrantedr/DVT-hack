@@ -1,9 +1,8 @@
 import tkinter as tk
 import logging as log
-
-import csv
 import time
 import threading
+
 
 # Model
 from model import Model
@@ -23,13 +22,29 @@ class Controller:
         self.menu_bar = MenuBar(self.root)
         self.main_window = MainWindow(self.root, self)
 
-        # Prepare run_circuit daemonic thread
-        self.run_circuit_thread = threading.Thread(target=self.run_circuit,
-                                                   daemon=True,
-                                                   name="Run Circuit")
+        # Set condition to stop threads
+        self.thread_stop = threading.Event()
 
-    def send_credentials(self):
-        self.model.send(0x2B, 0x00, 0x50, 0x02, 0xDF, 0x4B, 0xEF, 0xFA)
+        # Start sniffing the CAN bus
+        self.sniff_thread = threading.Thread(
+            target=self.model.sniff_bus,
+            daemon=True,
+            name="Sniffer")
+        self.sniff_thread.start()
+
+        # Start parsing input messages
+        self.queue_thread = threading.Thread(
+            target=self.model.parse_queue,
+            daemon=True,
+            name="Queue Parser"
+        )
+        self.queue_thread.start()
+
+        # Prepare run_circuit thread
+        self.run_circuit_thread = threading.Thread(
+            target=self.model.run_circuit,
+            name="Run Circuit"
+        )
 
     def update_nmt_state(self, state):
         self.main_window.tab_menu.tab_main.var_nmt.set(state)
@@ -66,7 +81,7 @@ class Controller:
     def set_operational_mode(self, command, index_lsb, index_msb,
                              sub_index, data_0=0x00, data_1=0x00, data_2=0x00,
                              data_3=0x00):
-        self.send_credentials()
+        self.model.send_credentials()
         time.sleep(0.05)
         self.model.send(command, index_lsb, index_msb, sub_index, data_0,
                         data_1, data_2, data_3)
@@ -74,7 +89,7 @@ class Controller:
     def set_operational_state(self, state, node, command, index_lsb, index_msb,
                               sub_index, data_0=0x00, data_1=0x00, data_2=0x00,
                               data_3=0x00):
-        self.send_credentials()
+        self.model.send_credentials()
         time.sleep(0.05)
         self.model.send(command, index_lsb, index_msb, sub_index, data_0,
                         data_1, data_2, data_3)
@@ -82,48 +97,20 @@ class Controller:
         self.model.nmt_send(state, node)
 
     def thread_run_circuit(self):
-        self.run_circuit_thread.start()
-
-    def run_circuit(self):
-        """
-        Tool for executing a simulated lap in the ENGIRO MS1920
-        Iván Rodríguez Méndez <irodrigu@ull.edu.es> 2021
-        """
-        last_time = 0
-
-        # TODO: Prepare model to send targets
-        # self.model.write ( ...
-
-        filename = "Motorland-lap.csv"
+        # TODO: Refactor thread to avoid starting it twice
         try:
-            with open(filename, 'r') as file:
-                reader = csv.reader(file)
-
-                # Skip (3) headers
-                for headers in range(0, 3):
-                    next(reader)
-
-                for row in reader:
-                    log.info(f"Time:{row[1][:5]}\tSpeed:{row[0][:6]}\t"
-                             f"Distance:{row[2][:2]}\tRPM:{row[5][:4]}\t"
-                             f"Torque:{row[6][:5]}")
-
-                    # TODO: CAN bus messages
-                    # self.model.write( ...
-
-                    # Wait for next torque demand
-                    time.sleep(float(row[1]) - last_time)
-                    last_time = float(row[1])
-        except FileNotFoundError:
-            log.info(f"No such file or directory: {filename}")
+            self.run_circuit_thread.start()
+        except RuntimeError:
+            log.warning("run_circuit_thread is already running")
 
     def on_close(self):
         # Set stop conditions for all threads
-        self.model.thread_stop.set()
+        self.thread_stop.set()
         self.main_window.tab_menu.thread_stop.set()
 
         # Join non-daemonic threads
         self.main_window.tab_menu.main_tab_sdo_thread.join()
+        self.run_circuit_thread.join()
 
         # End serial communication
         self.model.close()
