@@ -3,6 +3,8 @@ import logging as log
 import time
 import threading
 
+from os import mkdir
+from os.path import isdir
 
 # Model
 from model import Model
@@ -14,6 +16,24 @@ from menu_bar import MenuBar
 
 class Controller:
     def __init__(self):
+        # Set path and extension for log files
+        path = "./log/"
+        ext = ".log"
+        # Create directory for logs
+        if not isdir(path):
+            mkdir(path)
+
+        # Create logger
+        date_time = time.strftime("%d-%m-%Y-%H-%M-%S-%p")
+        log.basicConfig(
+            format="%(asctime)s.%(msecs)03d "
+                   "[%(filename)s:%(lineno)s:%(funcName)s()] "
+                   "%(levelname)s:\t%(message)s",
+            filename=path + date_time + ext,
+            datefmt="%d/%m/%Y %H:%M:%S",
+            level=log.INFO
+        )
+
         # Controller holds the main application
         self.root = tk.Tk()
 
@@ -43,6 +63,7 @@ class Controller:
         # Prepare run_circuit thread
         self.run_circuit_thread = threading.Thread(
             target=self.model.run_circuit,
+            daemon=True,
             name="Run Circuit"
         )
 
@@ -94,7 +115,7 @@ class Controller:
         self.model.send(command, index_lsb, index_msb, sub_index, data_0,
                         data_1, data_2, data_3)
         time.sleep(0.05)
-        self.model.nmt_send(state, node)
+        self.model.send_nmt(state, node)
 
     def thread_run_circuit(self):
         # TODO: Refactor thread to avoid starting it twice
@@ -106,11 +127,7 @@ class Controller:
     def on_close(self):
         # Set stop conditions for all threads
         self.thread_stop.set()
-        self.main_window.tab_menu.thread_stop.set()
-
-        # Join non-daemonic threads
-        self.main_window.tab_menu.main_tab_sdo_thread.join()
-        self.run_circuit_thread.join()
+        log.info("Exiting all threads safely")
 
         # End serial communication
         self.model.close()

@@ -3,9 +3,8 @@ import serial
 import time
 import logging as log
 
-from os import mkdir
-from os.path import isdir
 from queue import Queue
+
 
 # CAN constants
 STANDARD_FRAME = 11
@@ -25,22 +24,6 @@ class Model:
 
     def __init__(self, controller):
         self.controller = controller
-
-        # Set path and extension for log files
-        path = "./log/"
-        ext = ".log"
-        # Create directory for logs
-        if not isdir(path):
-            mkdir(path)
-
-        # Create logger
-        date_time = time.strftime("%d-%m-%Y-%H-%M-%S-%p")
-        log.basicConfig(
-            format="%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s",
-            filename=path + date_time + ext,
-            datefmt="%d/%m/%Y %H:%M:%S",
-            level=log.INFO
-        )
 
         # Start serial communication
         try:
@@ -62,12 +45,12 @@ class Model:
                                       index_lsb, index_msb, sub_index,
                                       data_0, data_1, data_2, data_3]))
 
-    def nmt_send(self, state, node):
-        self.arduino.write(bytearray([0x00, 0x02, state, node, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00]))
-
     def send_credentials(self):
         self.send(0x2B, 0x00, 0x50, 0x02, 0xDF, 0x4B, 0xEF, 0xFA)
+
+    def send_nmt(self, state, node):
+        self.arduino.write(bytearray([0x00, 0x02, state, node, 0x00, 0x00,
+                                      0x00, 0x00, 0x00, 0x00, 0x00]))
 
     def run_circuit(self):
         """
@@ -78,7 +61,7 @@ class Model:
 
         self.send_credentials()
         # Get ready to send targets
-        self.send(0x2B, 0x40, 0x60, 0x00, 0x06)           # Disable model
+        self.send(0x2B, 0x40, 0x60, 0x00, 0x06)     # Disable model
         time.sleep(0.02)
         self.send(0x2B, 0x40, 0x60, 0x00, 0x07)
         time.sleep(0.02)

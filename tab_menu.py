@@ -1,5 +1,3 @@
-import time                 # time.sleep
-import threading            # threading.Thread, threading.Event
 import tkinter as tk        # tk.BOTH
 from tkinter import ttk     # ttk.Notebook
 
@@ -30,70 +28,54 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
         # Selecting a tab triggers events
         self.bind('<<NotebookTabChanged>>', self.on_tab_changed)
 
-        # Set thread conditions
-        self.thread_stop = threading.Event()
-
         # Set on tab selection conditions
         # On Main tab by default
         self.__tab_state = (True, False, False, False)
 
-        # Start SDO request thread
-        self.main_tab_sdo_thread = threading.Thread(target=self.sdo_request,
-                                                    name="SDO Requests")
-        self.main_tab_sdo_thread.start()
+        # Start SDO requests
+        self.sdo_request()
 
     def sdo_request(self):
-        # TODO: Refactor thread to controller
-        while True:
-            # Keep sending these specific SDOs while we are in Main tab
-            if self.__tab_state[0]:
-                # NMT State (5110h, 0) read (0x40)
-                self.controller.write(0x40, 0x10, 0x51, 0x00)
-                time.sleep(0.02)
-                # Operational Mode (6061h, 0) read (0x40)
-                self.controller.write(0x40, 0x61, 0x60, 0x00)
-                time.sleep(0.02)
-                # Actual Velocity (606Ch, 0) read (0x40)
-                self.controller.write(0x40, 0x6C, 0x60, 0x00)
-                time.sleep(0.02)
-                # Actual Motor Current (6078h, 0) read (0x40)
-                self.controller.write(0x40, 0x78, 0x60, 0x00)
-                time.sleep(0.02)
-                # Reverse Switch (2122h, 0) read (0x40)
-                self.controller.write(0x40, 0x22, 0x21, 0x00)
-                time.sleep(0.02)
-                # Forward Switch (2121h, 0) read (0x40)
-                self.controller.write(0x40, 0x21, 0x21, 0x00)
-                time.sleep(0.02)
-                # FS1 Switch (2123h, 0) read (0x40)
-                self.controller.write(0x40, 0x23, 0x21, 0x00)
-                time.sleep(0.02)
-                # Seat Switch (2124h, 0) read (0x40)
-                self.controller.write(0x40, 0x24, 0x21, 0x00)
-                time.sleep(0.02)
-                # Max Motor Speed (6080h, 0) read (0x40)
-                self.controller.write(0x40, 0x80, 0x60, 0x00)
-                time.sleep(0.02)
-                # Another SDO
-                pass
-            if self.__tab_state[1]:
-                pass
-                # Another SDO
-                # Another SDO
-            if self.__tab_state[2]:
-                pass
-                # Another SDO
-                # Another SDO
-            if self.__tab_state[3]:
-                pass
-                # Another SDO
-                # Another SDO
-
-            # Check if we can close the thread
-            if self.thread_stop.is_set():
-                break
-
-            time.sleep(0.1)
+        # Keep sending these specific SDOs while we are in Main tab
+        if self.__tab_state[0]:
+            # NMT State (5110h, 0) read (0x40)
+            self.controller.write(0x40, 0x10, 0x51, 0x00)
+            # Operational Mode (6061h, 0) read (0x40)
+            self.controller.write(0x40, 0x61, 0x60, 0x00)
+            # Actual Velocity (606Ch, 0) read (0x40)
+            self.controller.write(0x40, 0x6C, 0x60, 0x00)
+            # Actual Motor Current (6078h, 0) read (0x40)
+            self.controller.write(0x40, 0x78, 0x60, 0x00)
+            # Reverse Switch (2122h, 0) read (0x40)
+            self.controller.write(0x40, 0x22, 0x21, 0x00)
+            # Forward Switch (2121h, 0) read (0x40)
+            self.controller.write(0x40, 0x21, 0x21, 0x00)
+            # FS1 Switch (2123h, 0) read (0x40)
+            self.controller.write(0x40, 0x23, 0x21, 0x00)
+            # Seat Switch (2124h, 0) read (0x40)
+            self.controller.write(0x40, 0x24, 0x21, 0x00)
+            # Max Motor Speed (6080h, 0) read (0x40)
+            self.controller.write(0x40, 0x80, 0x60, 0x00)
+            # Another SDO
+            print("Periodic SDO 1")
+            pass
+        if self.__tab_state[1]:
+            print("Periodic SDO 2")
+            pass
+            # Another SDO
+            # Another SDO
+        if self.__tab_state[2]:
+            print("Periodic SDO 3")
+            pass
+            # Another SDO
+            # Another SDO
+        if self.__tab_state[3]:
+            print("Periodic SDO 4")
+            pass
+            # Another SDO
+            # Another SDO
+        # Schedule another SDO request block
+        self.after(100, self.sdo_request)
 
     def on_tab_changed(self, event):
         tab = event.widget.tab('current')['text']
