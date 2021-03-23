@@ -57,20 +57,19 @@ class TabMenu(ttk.Notebook):    # self -> ttk.Notebook
             # Max Motor Speed (6080h, 0) read (0x40)
             self.controller.write(0x40, 0x80, 0x60, 0x00)
             # Another SDO
-            print("Periodic SDO 1")
             pass
+        # Keep sending these specific SDOs while we are in Tree tab
         if self.__tab_state[1]:
-            print("Periodic SDO 2")
             pass
             # Another SDO
             # Another SDO
+        # Keep sending these specific SDOs while we are in I/O tab
         if self.__tab_state[2]:
-            print("Periodic SDO 3")
             pass
             # Another SDO
             # Another SDO
+        # Keep sending these specific SDOs while we are in PDO tab
         if self.__tab_state[3]:
-            print("Periodic SDO 4")
             pass
             # Another SDO
             # Another SDO
