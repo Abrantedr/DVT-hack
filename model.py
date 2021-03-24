@@ -39,6 +39,9 @@ class Model:
             # Create a queue to parse input messages
             self.queue = Queue()
 
+            # Set condition for run_circuit
+            self.is_running = False
+
     def send(self, command, index_lsb, index_msb, sub_index, data_0=0x00,
              data_1=0x00, data_2=0x00, data_3=0x00):
         self.arduino.write(bytearray([SDO_MSB, SDO_LSB, DLC, command,
@@ -57,19 +60,15 @@ class Model:
         Tool for executing a simulated lap in the ENGIRO MS1920
         Iván Rodríguez Méndez <irodrigu@ull.edu.es> 2021
         """
+
+        # Set parameters
+        peak_torque = 90
         last_time = 0
 
-        self.send_credentials()
-        # Get ready to send targets
-        self.send(0x2B, 0x40, 0x60, 0x00, 0x06)     # Disable model
-        time.sleep(0.02)
-        self.send(0x2B, 0x40, 0x60, 0x00, 0x07)
-        time.sleep(0.02)
-        self.send(0x2B, 0x40, 0x60, 0x00, 0x0f)     # Enable model
-        time.sleep(0.02)
-
+        # Choose circuit
         filename = "Motorland-lap.csv"
         try:
+            log.info(f"Opening {filename}")
             with open(filename, 'r') as file:
                 reader = csv.reader(file)
 
@@ -77,15 +76,37 @@ class Model:
                 for headers in range(0, 3):
                     next(reader)
 
+                self.send_credentials()
+
+                log.info("Getting ready to send targets")
+                self.send(0x2B, 0x40, 0x60, 0x00, 0x06)  # Disable model
+                time.sleep(0.02)
+                self.send(0x2B, 0x40, 0x60, 0x00, 0x07)
+                time.sleep(0.02)
+                self.send(0x2B, 0x40, 0x60, 0x00, 0x0f)  # Enable model
+                time.sleep(0.02)
+
+                # Flag run_circuit state
+                self.is_running = True
+
+                log.info("Running circuit")
                 for row in reader:
+                    # Extract torque
+                    actual_torque = int(float(row[6]))
+                    torque_percent = int((actual_torque / peak_torque) * 1000)
+
+                    # Calculate torque
+                    torque_lsb = torque_percent & 0xFF
+                    torque_msb = torque_percent >> 8
+
                     log.info(f"Time:{row[1][:5]}\tSpeed:{row[0][:6]}\t"
                              f"Distance:{row[2][:2]}\tRPM:{row[5][:4]}\t"
-                             f"Torque:{row[6][:5]}")
+                             f"Torque:{row[6][:5]}\t"
+                             f"Torque %: {round(torque_percent * 0.1, 2)}\t"
+                             f"Torque LSB: {hex(torque_lsb)}\t"
+                             f"Torque MSB: {hex(torque_msb)}")
 
-                    # Extract torque
-                    # TODO: Calculate torque
-                    torque_lsb = 0x00
-                    torque_msb = 0x00
+                    # Send target torque
                     self.send(0x2B, 0x71, 0x60, 0x00, torque_lsb, torque_msb)
 
                     # Wait for next torque demand
@@ -196,5 +217,10 @@ class Model:
                 break
 
     def close(self):
+        # In case run_circuit was executing
+        if self.is_running:
+            log.info("Stopping motor")
+            self.send(0x2B, 0x71, 0x60, 0x00)
+
         log.info(f"Closing port: {self.arduino.name}")
         self.arduino.close()
